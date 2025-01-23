@@ -1,0 +1,82 @@
+# Router Configuration for COMPANY HQ
+# Filename: company-hq-r1-config.txt
+
+! 기본 설정
+hostname COMPANY-HQ-R1
+no ip domain lookup
+service timestamps debug datetime msec
+service timestamps log datetime msec
+ip cef
+username company privilege 15 secret 5 $1$1mv0$OcAb7Sa.Gu8UKlSAzfb1n1
+
+! SSH 설정
+ip ssh version 2
+
+! NAT 설정
+ip nat inside source list 1 interface Serial1/0 overload
+access-list 1 permit 172.16.150.0 0.0.0.255
+access-list 1 permit 172.16.10.0 0.0.0.255
+access-list 1 permit 172.16.20.0 0.0.0.255
+access-list 1 permit 172.16.30.0 0.0.0.255
+access-list 1 permit 172.16.40.0 0.0.0.255
+
+! IPsec 및 GRE 설정
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+crypto isakmp key 120241231 address 192.168.123.1
+
+crypto ipsec transform-set COMPANY-TRANSFORM ah-sha-hmac esp-aes esp-sha-hmac
+
+crypto map COMPANY-CRYPTO 10 ipsec-isakmp
+ set peer 192.168.123.1
+ set transform-set COMPANY-TRANSFORM
+ match address PANGYO-HQ1-GRE
+
+ip access-list extended PANGYO-HQ1-GRE
+ permit gre 192.168.10.0 0.0.0.3 192.168.123.0 0.0.0.3
+
+! 인터페이스 설정
+interface Tunnel1
+ ip address 10.10.10.2 255.255.255.252
+ ip mtu 1400
+ ip nat inside
+ ip virtual-reassembly
+ keepalive 10 3
+ tunnel source 192.168.10.2
+ tunnel destination 192.168.123.1
+
+interface FastEthernet0/0
+ ip address 172.16.1.1 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly
+
+interface FastEthernet0/1
+ ip address 10.0.0.1 255.255.255.248
+ standby 1 ip 10.0.0.3
+ standby 1 priority 110
+ standby 1 preempt
+
+interface Serial1/0
+ ip address 192.168.10.2 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly
+ crypto map COMPANY-CRYPTO
+
+! 정적 라우팅 설정
+ip route 0.0.0.0 0.0.0.0 192.168.10.1 10
+ip route 0.0.0.0 0.0.0.0 10.0.0.2 20
+ip route 172.16.3.0 255.255.255.0 172.16.1.2
+ip route 172.16.50.0 255.255.255.0 Tunnel1
+ip route 172.16.200.0 255.255.255.0 10.0.0.2
+
+! 라인 설정
+line con 0
+ exec-timeout 0 0
+ privilege level 15
+ logging synchronous
+
+line vty 0 4
+ login local
+ transport input ssh
