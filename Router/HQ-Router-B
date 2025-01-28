@@ -1,0 +1,82 @@
+# Router Configuration for COMPANY Branch R2
+# Filename: company-branch-r2-config.txt
+
+! 기본 설정
+hostname COMPANY-R2
+no ip domain lookup
+service timestamps debug datetime msec
+service timestamps log datetime msec
+ip cef
+
+! NAT 설정
+ip nat inside source list 1 interface Serial1/0 overload
+access-list 1 permit 172.16.150.0 0.0.0.255
+access-list 1 permit 172.16.10.0 0.0.0.255
+access-list 1 permit 172.16.20.0 0.0.0.255
+access-list 1 permit 172.16.30.0 0.0.0.255
+access-list 1 permit 172.16.40.0 0.0.0.255
+
+! IPsec 및 GRE 설정
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 5
+
+crypto isakmp policy 20
+ encr aes
+ authentication pre-share
+ group 5
+
+crypto isakmp key 220241231 address 192.168.123.1
+
+crypto ipsec transform-set COMPANY-TRANSFORM ah-sha-hmac esp-aes esp-sha-hmac
+
+crypto map COMPANY-CRYPTO 10 ipsec-isakmp
+ set peer 192.168.123.1
+ set transform-set COMPANY-TRANSFORM
+ match address PANGYO-HQ2-GRE
+
+ip access-list extended PANGYO-HQ2-GRE
+ permit gre 192.168.20.0 0.0.0.3 192.168.123.0 0.0.0.3
+
+! 인터페이스 설정
+interface Tunnel2
+ ip address 10.10.20.2 255.255.255.252
+ ip mtu 1400
+ ip nat inside
+ ip virtual-reassembly
+ keepalive 10 3
+ tunnel source 192.168.20.2
+ tunnel destination 192.168.123.1
+
+interface FastEthernet0/0
+ ip address 172.16.2.1 255.255.255.252
+ ip nat inside
+ ip virtual-reassembly
+ duplex auto
+ speed auto
+
+interface FastEthernet0/1
+ ip address 10.0.0.2 255.255.255.248
+ duplex auto
+ speed auto
+ standby 1 ip 10.0.0.3
+ standby 1 preempt
+
+interface Serial1/0
+ ip address 192.168.20.2 255.255.255.252
+ ip nat outside
+ ip virtual-reassembly
+ crypto map COMPANY-CRYPTO
+
+! 정적 라우팅 설정
+ip route 0.0.0.0 0.0.0.0 192.168.20.1
+ip route 0.0.0.0 0.0.0.0 10.0.0.1 10
+ip route 172.16.4.0 255.255.255.252 172.16.2.2
+ip route 172.16.10.0 255.255.255.0 172.16.2.2
+ip route 172.16.20.0 255.255.255.0 172.16.2.2
+ip route 172.16.30.0 255.255.255.0 172.16.2.2
+ip route 172.16.40.0 255.255.255.0 172.16.2.2
+ip route 172.16.50.0 255.255.255.0 10.10.20.1
+ip route 172.16.150.0 255.255.255.0 172.16.2.2
+ip route 172.16.200.0 255.255.255.0 172.16.2.2
