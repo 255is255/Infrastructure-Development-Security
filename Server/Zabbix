@@ -1,5 +1,4 @@
-#!/bin/bash
-# ZABBIX 서버 구현
+# ZABBIX 서버 설치
 # Linux Version : CentOS 9.0
 # Zabbix Version : 7.0.7
 
