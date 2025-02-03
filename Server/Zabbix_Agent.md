@@ -1,4 +1,4 @@
-### ZABBIX Agent 설치
+## ZABBIX Agent 설치 과정
 - Linux Version : Debian 11
 - Zabbix Version : 7.0.7
 
