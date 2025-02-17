@@ -14,3 +14,11 @@ DNS 응답 과정에서 특별한 규칙을 추가하는 것이 DNS RPZ입니다
 ## 사용 예시
 현 시스템에선 아래 시나리오를 기반으로 방어하고자 시스템을 구성해보았습니다.
 ![구성 소개](https://github.com/user-attachments/assets/2d4798ff-5710-49d7-ade3-bfa3c9739cef)
+
+업무시간에 웹서핑을 시도하는 A사원 PC에 대한 외부 접근 차단
+![image](https://github.com/user-attachments/assets/f837b1e6-a6fe-4f21-a286-549962d43534)
+
+업무상 불필요한 인트라넷 도메인 접근을 시도하는 B사원 PC에 대한 접근 차단
+![image](https://github.com/user-attachments/assets/cc454ce2-851a-4b16-8f61-e51a814b3186)
+
+
