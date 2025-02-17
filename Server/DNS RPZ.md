@@ -22,3 +22,74 @@ DNS 응답 과정에서 특별한 규칙을 추가하는 것이 DNS RPZ입니다
 ![image](https://github.com/user-attachments/assets/cc454ce2-851a-4b16-8f61-e51a814b3186)
 
 
+**/etc/named.conf**
+```
+allow-recursion { 172.16.150.0/24; 172.16.10.0/24; 172.16.20.0/24; 172.16.30.0/24; 172.16.40.0/24; };
+forwarders {
+  8.8.8.8; // Google Public DNS
+};
+forward only; // 포워딩만 수행 (루트 힌트 비활성화)
+
+ecursion yes;
+
+response-policy {
+  zone "rpz";
+};
+.
+.
+.
+zone "rpz" {
+	type master;
+	file "/var/named/rpz.zone";
+	allow-query { any; }; // RPZ는 모든 쿼리에 대해 작동
+	allow-transfer { none; };
+};
+```
+**/etc/named.rfc1912.zones**
+```
+zone "choihunseo.com" IN {
+        type master;
+        file "choihunseo.com.zone";
+};
+```
+
+**/var/named/choihunseo.con.zone**
+```
+$TTL 3H
+@       IN SOA  ns.choihunseo.com. root.choihunseo.com. (
+                                        1       ; serial
+                                        3H      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+        NS      ns.choihunseo.com.
+        MX 10   mail.choihunseo.com.
+        IN A    172.16.150.11
+ns      IN A    172.16.150.11
+mail    IN A    172.16.150.11
+randing IN A    172.16.150.11
+web     IN CNAME www
+www     IN A    172.16.150.22
+```
+
+**/var/named/rpz.zone**
+```
+$TTL 3H
+@       IN SOA  ns.choihunseo.com. root.choihunseo.com. (
+                                        3       ; serial
+                                        3H      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+
+    IN NS   ns.choihunseo.com.
+
+; Zabbix 서버 리다이렉션
+zabbix.choihunseo.com.rpz.    IN CNAME randing.choihunseo.com.
+
+; Coupang 도메인 리다이렉션
+*.coupang.com.rpz.           IN CNAME randing.choihunseo.com.
+
+; 랜딩 페이지
+randing.choihunseo.com.   IN A 172.16.150.11
+```
